@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  script.
+    var name;
+    var socket = io();
+    $(function(){
+      $('#nameBtn').click(function(){
+        name = $('#urName').val();
+        $('#urInput').css('display', 'none');
+        $('#msgDiv').css('display', 'inline'); 
+      });
+      $('#msgBtn').click(function(){
+        var msgText = name + ':' + $('#msgInput').val() + '\n';
+        socket.emit('update', msgText);
+        $('#msgInput').val('');
+      });
+      socket.on('update', function(chatmsg){
+        $('#msg').append($('<li>').text(chatmsg));
+      });
+    })
+  div#urInput
+    h1 Please enter your name
+    input#urName(type='text')
+    &nbsp;
+    input#nameBtn(type='button' value='Submit')
+
+  div#msgDiv(style='display:none')
+    textarea#msg(style='width:300px;height:250px;')
+    br
+    textarea#msgInput(type='text' style='width:300px;height:40px;')
+    br
+    input#msgBtn(type='button' value='send')
+
