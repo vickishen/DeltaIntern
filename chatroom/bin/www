@@ -6,8 +6,18 @@ var io = require('socket.io');
  */
 
 var app = require('../app');
-var debug = require('debug')('chat-isomorphic-server:server');
+var debug = require('debug')('chatroom:server');
 var http = require('http');
+var mongoose = require('mongoose');
+
+/* initial mongoose */
+mongoose.connect('mongodb://localhost/chatroom:server', function(err) {
+    if(err) {
+        console.log('mongodb connection error', err);
+    } else {
+        console.log('mongodb connection successful');
+    }
+});
 
 /**
  * Get port from environment and store in Express.
@@ -21,7 +31,10 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-var msgText ;
+var msgText;
+var user_input = {username:"", input_text:""};
+console.log(msgText);
+
 //console.log(pos);
 
 io = io.listen(server);
@@ -33,9 +46,14 @@ io.on('connection', function(socket){
     console.log('User disconnected. Socket id %s', socket.id);
   });
 
-  socket.on('update', function(_msgText){
-    msgText = _msgText;
-    io.emit('update', msgText); 
+  // socket.on('update', function(_msgText){
+  //   msgText = _msgText;
+  //   io.emit('update', msgText); 
+  // });
+
+  socket.on('chat' , function(_user_input){
+    user_input = _user_input;
+    io.emit('chat', user_input);
   });
 });
 

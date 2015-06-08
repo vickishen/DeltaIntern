@@ -1,24 +1,69 @@
 extends layout
 
 block content
+
   script.
-    var name;
-    var socket = io();
     $(function(){
+      var name;
+      var socket = io();
+      $('#urName').keypress(function(e){
+        if(e.keyCode == 13){
+          if($('#urName').val() != ""){
+            console.log('QQ');
+            $('#nameBtn').click();
+          }
+        }
+      });
+
+      $('#msgInput').keypress(function(e){
+        if(e.keyCode == 13){
+          if($('#msgInput').val() != ""){
+            $('#msgBtn').click();
+          }
+        }
+      });
+
       $('#nameBtn').click(function(){
         name = $('#urName').val();
         $('#urInput').css('display', 'none');
         $('#msgDiv').css('display', 'inline'); 
+
+        $.get("http://localhost:3000/inputs", function(raw_data){
+          for(var obj in raw_data){
+            console.log(raw_data[obj].note);
+            $('#msg').append( raw_data[obj].name + " : ");
+            $('#msg').append( raw_data[obj].note + "\n");
+          }
+          $('#msg').scrollTop($('#msg').scrollHeight);
+        });
       });
       $('#msgBtn').click(function(){
-        var msgText = name + ':' + $('#msgInput').val() + '\n';
-        socket.emit('update', msgText);
+        //- var msgText = name + ':' + $('#msgInput').val() + '\n';
+        //- socket.emit('update', msgText);
+        var user_input = {username:"", input_text:""};
+        user_input.username = name;
+        user_input.input_text = $('#msgInput').val();
+        socket.emit('chat', user_input);
+
+        // send data to todos
+        $.post("http://localhost:3000/inputs",
+          { name: name,
+            completed: "True",
+            note: user_input.input_text,
+            updated_at: Date.now,
+          });
         $('#msgInput').val('');
       });
-      socket.on('update', function(chatmsg){
-        $('#msg').append($('<li>').text(chatmsg));
+      //- socket.on('update', function(chatmsg){
+      //-   //$('#msg').append($('<li>').text(chatmsg));
+      //- });
+      socket.on('chat', function(user){
+        $('#msg').append( user.username + " : ");
+        $('#msg').append( user.input_text + "\n");
+        $('#msg').scrollTop($('#msg').scrollHeight);
       });
     })
+
   div#urInput
     h1 Please enter your name
     input#urName(type='text')
@@ -26,9 +71,9 @@ block content
     input#nameBtn(type='button' value='Submit')
 
   div#msgDiv(style='display:none')
-    textarea#msg(style='width:300px;height:250px;')
+    textarea#msg(style='width:300px;height:250px;' readonly = 'readonly')
     br
-    textarea#msgInput(type='text' style='width:300px;height:40px;')
+    input#msgInput(type='text' style='width:300px;height:40px;')
     br
     input#msgBtn(type='button' value='send')
 
